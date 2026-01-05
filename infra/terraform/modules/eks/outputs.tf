@@ -13,3 +13,6 @@ output "cluster_ca_certificate" {
 output "oidc_provider_arn" {
   value = aws_iam_openid_connect_provider.this.arn
 }
+output "oidc_issuer_url" {
+  value = replace(aws_eks_cluster.this.identity[0].oidc[0].issuer, "https://", "")
+}

@@ -60,3 +60,23 @@ module "eks" {
   min_size            = 1
   max_size            = 3
 }
+# ALB Controller IRSA Role (design-only wiring)
+module "alb_irsa" {
+  source = "../../modules/iam-irsa"
+
+  project     = "lab-platform"
+  environment = "dev"
+  name        = "aws-load-balancer-controller"
+
+  # From EKS module outputs
+  oidc_provider_arn = module.eks.oidc_provider_arn
+
+  # IMPORTANT: This expects the OIDC issuer URL without https://
+  # We'll add this output in the EKS module in the next step if not present.
+  oidc_provider_url = module.eks.oidc_issuer_url
+
+  namespace            = "kube-system"
+  service_account_name = "aws-load-balancer-controller"
+
+  policy_json = file("${path.module}/../../policies/aws-load-balancer-controller.json")
+}
