@@ -62,3 +62,19 @@ module "eks" {
   min_size            = 3
   max_size            = 6
 }
+# ALB Controller IRSA Role
+module "alb_irsa" {
+  source = "../../modules/iam-irsa"
+
+  project     = "lab-platform"
+  environment = "prod"
+  name        = "aws-load-balancer-controller"
+
+  oidc_provider_arn = module.eks.oidc_provider_arn
+  oidc_provider_url = module.eks.oidc_issuer_url
+
+  namespace            = "kube-system"
+  service_account_name = "aws-load-balancer-controller"
+
+  policy_json = file("${path.module}/../../policies/aws-load-balancer-controller.json")
+}

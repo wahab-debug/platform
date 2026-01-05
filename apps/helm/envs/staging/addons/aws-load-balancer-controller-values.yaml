@@ -1,0 +1,10 @@
+clusterName: lab-platform-staging-eks
+
+serviceAccount:
+  create: true
+  name: aws-load-balancer-controller
+  annotations:
+    eks.amazonaws.com/role-arn: REPLACE_ME_WITH_ROLE_ARN
+
+region: ap-south-1
+vpcId: REPLACE_ME_WITH_VPC_ID

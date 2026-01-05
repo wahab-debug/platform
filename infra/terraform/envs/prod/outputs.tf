@@ -9,3 +9,7 @@ output "eks_cluster_name" {
 output "eks_oidc_provider_arn" {
   value = module.eks.oidc_provider_arn
 }
+
+output "alb_controller_irsa_role_arn" {
+  value = module.alb_irsa.role_arn
+}
