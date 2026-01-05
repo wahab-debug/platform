@@ -1,0 +1,7 @@
+namespaces:
+  - dev
+  - staging
+  - prod
+  - observability
+  - ingress-system
+  - argo-rollouts
