@@ -15,3 +15,10 @@
 # Helm
 **/charts/**/charts/
 **/charts/**/Chart.lock
+# Kubernetes / Helm
+**/kubeconfig*
+**/*.secret.yaml
+# Local env / credentials
+.env
+.env.*
+.aws/
