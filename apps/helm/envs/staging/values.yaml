@@ -1,0 +1,6 @@
+image:
+  repository: REPLACE_ME_LATER
+  tag: staging
+
+replicaCount: 2
+resources: {}

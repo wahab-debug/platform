@@ -1,0 +1,6 @@
+image:
+  repository: REPLACE_ME_LATER
+  tag: dev
+
+replicaCount: 1
+resources: {}

@@ -1,0 +1,17 @@
+# Terraform
+**/.terraform/*
+**/*.tfstate
+**/*.tfstate.*
+**/*.tfvars
+**/crash.log
+**/crash.*.log
+
+# Local tooling
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Helm
+**/charts/**/charts/
+**/charts/**/Chart.lock
