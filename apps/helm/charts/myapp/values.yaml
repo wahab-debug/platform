@@ -20,6 +20,13 @@ ingress:
         - path: /
           pathType: Prefix
 
+rollouts:
+  enabled: true
+  autoPromotionEnabled: false
+  previewIngress:
+    enabled: false
+    host: preview.example.local
+
 resources:
   requests:
     cpu: 100m

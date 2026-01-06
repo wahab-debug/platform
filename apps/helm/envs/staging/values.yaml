@@ -18,3 +18,9 @@ ingress:
       paths:
         - path: /
           pathType: Prefix
+rollouts:
+  enabled: true
+  autoPromotionEnabled: false
+  previewIngress:
+    enabled: true
+    host: preview-staging.example.local

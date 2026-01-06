@@ -1,0 +1,23 @@
+{{- if and .Values.ingress.enabled .Values.rollouts.previewIngress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "myapp.fullname" . }}-preview
+  annotations:
+{{- range $k, $v := .Values.ingress.annotations }}
+    {{ $k }}: {{ $v | quote }}
+{{- end }}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  rules:
+    - host: {{ .Values.rollouts.previewIngress.host | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "myapp.fullname" . }}-preview
+                port:
+                  number: {{ .Values.service.port }}
+{{- end }}
