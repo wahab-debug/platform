@@ -1,6 +1,20 @@
+replicaCount: 3
+
 image:
-  repository: REPLACE_ME_LATER
+  repository: REPLACE_ME_ECR_REPO
   tag: prod
 
-replicaCount: 2
-resources: {}
+env:
+  APP_ENV: "prod"
+
+ingress:
+  enabled: true
+  className: alb
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+  hosts:
+    - host: app.example.com
+      paths:
+        - path: /
+          pathType: Prefix

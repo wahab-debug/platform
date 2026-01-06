@@ -1,6 +1,20 @@
+replicaCount: 1
+
 image:
-  repository: REPLACE_ME_LATER
+  repository: REPLACE_ME_ECR_REPO
   tag: dev
 
-replicaCount: 1
-resources: {}
+env:
+  APP_ENV: "dev"
+
+ingress:
+  enabled: true
+  className: alb
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+  hosts:
+    - host: dev.example.local
+      paths:
+        - path: /
+          pathType: Prefix
