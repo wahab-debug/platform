@@ -7,69 +7,67 @@ The project is intentionally designed **infrastructure-first**, following real-w
 
 ---
 
+## Architecture Diagram
 
-                               ┌────────────────────────────┐
-                               │        GitHub Actions        │
-                               │  CI/CD (OIDC → AWS IAM)      │
-                               └───────────────┬────────────┘
-                                               │
-                                     AssumeRoleWithWebIdentity
-                                               │
-                               ┌───────────────▼────────────┐
-                               │           AWS IAM            │
-                               │   OIDC Role (No Static Keys) │
-                               └───────────────┬────────────┘
-                                               │
-        ┌──────────────────────────────────────┼──────────────────────────────────────┐
-        │                                      │                                      │
-┌───────▼────────┐                    ┌────────▼────────┐                    ┌────────▼────────┐
-│   Dev Account   │                    │ Staging Account  │                    │   Prod Account   │
-│   (Same AWS)    │                    │  (Same AWS)      │                    │  (Same AWS)      │
-└───────┬────────┘                    └────────┬────────┘                    └────────┬────────┘
-        │                                      │                                      │
-        │ Terraform (separate state per env)   │ Terraform (separate state per env)   │ Terraform (separate state per env)
-        │                                      │                                      │
-┌───────▼──────────────────────────────────────────────────────────────────────────────────────────┐
-│                                           AWS VPC (per env)                                         │
-│                                                                                                      │
-│   ┌───────────────┐            ┌───────────────┐            ┌───────────────┐                      │
-│   │ Public Subnet │            │ Public Subnet │            │  NAT Gateway  │                      │
-│   └───────┬───────┘            └───────┬───────┘            └───────┬───────┘                      │
-│           │                            │                            │                              │
-│   ┌───────▼───────┐            ┌───────▼───────┐            ┌───────▼───────┐                      │
-│   │ Private Subnet│            │ Private Subnet│            │ Route Tables  │                      │
-│   └───────┬───────┘            └───────┬───────┘            └───────────────┘                      │
-│           │                            │                                                           │
-│           └──────────────┬─────────────┴──────────────┐                                            │
-│                          │                            │                                            │
-│               ┌──────────▼──────────┐       ┌─────────▼─────────┐                                  │
-│               │     EKS Cluster      │       │ Managed NodeGroup  │                                  │
-│               │  (Private Endpoint)  │       │ (Private Subnets)  │                                  │
-│               └──────────┬──────────┘       └─────────┬─────────┘                                  │
-│                          │                            │                                            │
-│        ┌─────────────────▼─────────────────┐          │                                            │
-│        │        Kubernetes Add-ons          │          │                                            │
-│        │-----------------------------------│          │                                            │
-│        │ • AWS Load Balancer Controller     │◄─ IRSA ─┘                                            │
-│        │ • Argo Rollouts (Blue/Green)      │                                                   │
-│        │ • metrics-server                  │                                                   │
-│        │ • Fluent Bit → CloudWatch Logs    │◄─ IRSA                                            │
-│        │ • Prometheus + Grafana            │                                                   │
-│        └─────────────────┬─────────────────┘                                                   │
-│                          │                                                                      │
-│                   ┌──────▼──────┐                                                               │
-│                   │ Application │                                                               │
-│                   │   (Helm)    │                                                               │
-│                   │  Blue/Green │                                                               │
-│                   └──────┬──────┘                                                               │
-│                          │                                                                      │
-│               ┌──────────▼──────────┐                                                           │
-│               │ AWS ALB (Ingress)    │                                                           │
-│               │ Active / Preview     │                                                           │
-│               └─────────────────────┘                                                           │
-└────────────────────────────────────────────────────────────────────────────────────────────────────┘
+### High-Level Platform Architecture (ASCII)
 
-
+```text
+GitHub Actions
+  |
+  |  CI / CD
+  |  (OIDC authentication)
+  v
+AWS IAM
+  |
+  |  OIDC Provider
+  |  No Static Credentials
+  v
+Terraform
+  |
+  |  Remote State (S3 + DynamoDB)
+  |  Isolated per Environment
+  |
+  +--> Dev
+  |
+  +--> Staging
+  |
+  +--> Prod
+  |
+  v
+AWS VPC
+  |
+  |-- Public Subnets
+  |-- NAT Gateway
+  |-- Private Subnets
+  |
+  v
+Amazon EKS
+  |
+  |-- Private API Endpoint
+  |-- Managed Node Groups
+  |
+  v
+Kubernetes Platform Add-ons
+  |
+  |-- AWS Load Balancer Controller (IRSA)
+  |-- Argo Rollouts (Blue / Green)
+  |-- metrics-server
+  |-- Fluent Bit → CloudWatch Logs (IRSA)
+  |-- Prometheus
+  |-- Grafana
+  |
+  v
+Application Workloads
+  |
+  |-- Deployed via Helm
+  |-- Blue / Green Strategy
+  |
+  v
+AWS Application Load Balancer
+  |
+  |-- Active Service
+  |-- Preview Service
+```
 ## High-Level Architecture
 
 **Environments**
@@ -99,7 +97,7 @@ Each environment is **fully isolated** with:
 ---
 
 ## Repository Structure
-
+```text
 platform/
 ├── infra/
 │ └── terraform/
@@ -125,7 +123,7 @@ platform/
 ├── docs/ # architecture, add-ons, alerting strategy
 ├── Makefile
 └── README.md
-
+```
 ---
 
 ## Infrastructure Design
@@ -249,6 +247,70 @@ It is designed to be **auditable, explainable, and interview-ready**.
 **DevOps / Platform Engineer**  
 Focused on building secure, scalable, and observable cloud platforms using AWS and Kubernetes.
 
+```text
+
+                               ┌────────────────────────────┐
+                               │        GitHub Actions        │
+                               │  CI/CD (OIDC → AWS IAM)      │
+                               └───────────────┬────────────┘
+                                               │
+                                     AssumeRoleWithWebIdentity
+                                               │
+                               ┌───────────────▼────────────┐
+                               │           AWS IAM            │
+                               │   OIDC Role (No Static Keys) │
+                               └───────────────┬────────────┘
+                                               │
+        ┌──────────────────────────────────────┼──────────────────────────────────────┐
+        │                                      │                                      │
+┌───────▼────────┐                    ┌────────▼────────┐                    ┌────────▼────────┐
+│   Dev Account   │                    │ Staging Account  │                    │   Prod Account   │
+│   (Same AWS)    │                    │  (Same AWS)      │                    │  (Same AWS)      │
+└───────┬────────┘                    └────────┬────────┘                    └────────┬────────┘
+        │                                      │                                      │
+        │ Terraform (separate state per env)   │ Terraform (separate state per env)   │ Terraform (separate state per env)
+        │                                      │                                      │
+┌───────▼──────────────────────────────────────────────────────────────────────────────────────────┐
+│                                           AWS VPC (per env)                                         │
+│                                                                                                      │
+│   ┌───────────────┐            ┌───────────────┐            ┌───────────────┐                      │
+│   │ Public Subnet │            │ Public Subnet │            │  NAT Gateway  │                      │
+│   └───────┬───────┘            └───────┬───────┘            └───────┬───────┘                      │
+│           │                            │                            │                              │
+│   ┌───────▼───────┐            ┌───────▼───────┐            ┌───────▼───────┐                      │
+│   │ Private Subnet│            │ Private Subnet│            │ Route Tables  │                      │
+│   └───────┬───────┘            └───────┬───────┘            └───────────────┘                      │
+│           │                            │                                                           │
+│           └──────────────┬─────────────┴──────────────┐                                            │
+│                          │                            │                                            │
+│               ┌──────────▼──────────┐       ┌─────────▼─────────┐                                  │
+│               │     EKS Cluster      │       │ Managed NodeGroup  │                                  │
+│               │  (Private Endpoint)  │       │ (Private Subnets)  │                                  │
+│               └──────────┬──────────┘       └─────────┬─────────┘                                  │
+│                          │                            │                                            │
+│        ┌─────────────────▼─────────────────┐          │                                            │
+│        │        Kubernetes Add-ons          │          │                                            │
+│        │-----------------------------------│          │                                            │
+│        │ • AWS Load Balancer Controller     │◄─ IRSA ─┘                                            │
+│        │ • Argo Rollouts (Blue/Green)      │                                                   │
+│        │ • metrics-server                  │                                                   │
+│        │ • Fluent Bit → CloudWatch Logs    │◄─ IRSA                                            │
+│        │ • Prometheus + Grafana            │                                                   │
+│        └─────────────────┬─────────────────┘                                                   │
+│                          │                                                                      │
+│                   ┌──────▼──────┐                                                               │
+│                   │ Application │                                                               │
+│                   │   (Helm)    │                                                               │
+│                   │  Blue/Green │                                                               │
+│                   └──────┬──────┘                                                               │
+│                          │                                                                      │
+│               ┌──────────▼──────────┐                                                           │
+│               │ AWS ALB (Ingress)    │                                                           │
+│               │ Active / Preview     │                                                           │
+│               └─────────────────────┘                                                           │
+└────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+```
 ---
 
 ## Disclaimer
