@@ -1,0 +1,97 @@
+name: CD - Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to deploy"
+        type: choice
+        required: true
+        options:
+          - dev
+          - staging
+          - prod
+      image_tag:
+        description: "Image tag (commit SHA)"
+        required: true
+  push:
+    branches: ["main"]
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: ap-south-1
+  ECR_REPO: ${{ vars.ECR_REPO }}
+
+jobs:
+  deploy-dev-on-main:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment: dev
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Install tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bash
+          curl -sSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+      - name: Deploy to dev
+        run: |
+          bash cicd/scripts/helm_deploy.sh \
+            dev \
+            "${{ vars.DEV_CLUSTER_NAME }}" \
+            "${{ env.AWS_REGION }}" \
+            dev \
+            "${{ env.ECR_REPO }}" \
+            "${GITHUB_SHA}"
+
+  deploy-manual:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Install tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bash
+          curl -sSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+      - name: Deploy manually
+        run: |
+          # Choose cluster per environment via repo variables
+          if [ "${{ inputs.environment }}" = "staging" ]; then
+            CLUSTER="${{ vars.STAGING_CLUSTER_NAME }}"
+            NS="staging"
+          elif [ "${{ inputs.environment }}" = "prod" ]; then
+            CLUSTER="${{ vars.PROD_CLUSTER_NAME }}"
+            NS="prod"
+          else
+            CLUSTER="${{ vars.DEV_CLUSTER_NAME }}"
+            NS="dev"
+          fi
+
+          bash cicd/scripts/helm_deploy.sh \
+            "${{ inputs.environment }}" \
+            "$CLUSTER" \
+            "${{ env.AWS_REGION }}" \
+            "$NS" \
+            "${{ env.ECR_REPO }}" \
+            "${{ inputs.image_tag }}"
