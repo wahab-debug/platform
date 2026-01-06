@@ -77,3 +77,14 @@ helm-template-staging:
 .PHONY: helm-template-prod
 helm-template-prod:
 	helm template myapp $(HELM_DIR)/charts/myapp -f $(HELM_DIR)/envs/prod/values.yaml --namespace prod
+
+.PHONY: addons-dev addons-staging addons-prod
+
+addons-dev:
+	@echo "Installing add-ons for dev (namespaces, ALB, metrics-server, fluent-bit, argo-rollouts)"
+
+addons-staging:
+	@echo "Installing add-ons for staging (namespaces, ALB, metrics-server, fluent-bit, argo-rollouts)"
+
+addons-prod:
+	@echo "Installing add-ons for prod (namespaces, ALB, metrics-server, fluent-bit, argo-rollouts)"

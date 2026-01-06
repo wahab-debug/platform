@@ -1,0 +1,14 @@
+serviceAccount:
+  create: true
+  name: fluent-bit
+
+cloudWatch:
+  enabled: true
+  region: ap-south-1
+  logGroupName: /eks/lab-platform/dev
+  logStreamPrefix: fluentbit-
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 100Mi
