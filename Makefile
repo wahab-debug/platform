@@ -88,3 +88,14 @@ addons-staging:
 
 addons-prod:
 	@echo "Installing add-ons for prod (namespaces, ALB, metrics-server, fluent-bit, argo-rollouts)"
+
+.PHONY: observability-dev observability-staging observability-prod
+
+observability-dev:
+	@echo "Installing Prometheus and Grafana for dev"
+
+observability-staging:
+	@echo "Installing Prometheus and Grafana for staging"
+
+observability-prod:
+	@echo "Installing Prometheus and Grafana for prod"

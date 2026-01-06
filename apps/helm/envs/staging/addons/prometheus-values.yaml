@@ -1,0 +1,16 @@
+server:
+  replicaCount: 1
+
+  resources:
+    requests:
+      cpu: 300m
+      memory: 1Gi
+
+alertmanager:
+  enabled: true
+
+kubeStateMetrics:
+  enabled: true
+
+nodeExporter:
+  enabled: true
